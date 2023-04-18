@@ -1,34 +1,19 @@
-# git-url
+# joat-git-url-rs
 
-[![AppVeyor status for project](https://ci.appveyor.com/api/projects/status/fxw6ppgkjjel568o?svg=true)](https://ci.appveyor.com/project/rcook/git-url)
-[![AppVeyor status for master branch](https://ci.appveyor.com/api/projects/status/fxw6ppgkjjel568o/branch/master?svg=true)](https://ci.appveyor.com/project/rcook/git-url/branch/master)
+[![CI](https://github.com/rcook/joat-git-url-rs/actions/workflows/ci.yaml/badge.svg)][ci-workflow]
+[![Publish](https://github.com/rcook/joat-git-url-rs/actions/workflows/publish.yaml/badge.svg)][publish-workflow]
+[![crates.io](https://img.shields.io/crates/v/joatmon.svg)][crates-io]
 
-_Parse Git repo URLs in Rust_
+Simple Git URL parser
 
-[Official home page][home]
+## Use package
 
-This is intended to be a cross-platform Rust function for parsing Git repo URLs in Rust.
-
-## Building locally
-
-### Install Rust
-
-* [rustup][rustup] is recommended
-* Building with rustup has been tested on Linux, Windows and macOS
-
-### Clone workspace
+Get it from [crates.io][crates-io]:
 
 ```bash
-cd /path/to/repos
-git clone https://gitlab.com/rcook/git-url.git
-cd /path/to/repos/git-url
-cargo build
+cargo add joat-git-url
 ```
 
-## Licence
-
-[MIT License][licence]
-
-[home]: https://github.com/rcook/git-url
-[licence]: LICENSE
-[rustup]: https://rustup.rs/
+[ci-workflow]: https://github.com/rcook/joat-git-url-rs/actions/workflows/ci.yaml
+[crates-io]: https://crates.io/crates/joatmon
+[publish-workflow]: https://github.com/rcook/joat-git-url-rs/actions/workflows/publish.yaml
