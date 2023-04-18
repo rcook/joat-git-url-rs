@@ -15,5 +15,5 @@ cargo add joat-git-url
 ```
 
 [ci-workflow]: https://github.com/rcook/joat-git-url-rs/actions/workflows/ci.yaml
-[crates-io]: https://crates.io/crates/joatmon
+[crates-io]: https://crates.io/crates/joat-git-url
 [publish-workflow]: https://github.com/rcook/joat-git-url-rs/actions/workflows/publish.yaml
