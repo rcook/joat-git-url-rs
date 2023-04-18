@@ -3,7 +3,7 @@ authors = ["Richard Cook"]
 description = "Git URL parser"
 homepage = "https://github.com/rcook/joatmon-rs/"
 license = "MIT"
-name = "git-url"
+name = "joat-git-url"
 version = "0.0.0"
 edition = "2021"
 
