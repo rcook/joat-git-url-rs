@@ -50,14 +50,6 @@ impl GitUrl {
     }
 
     #[allow(dead_code)]
-    pub fn to_string(&self) -> String {
-        match self.path.len() {
-            0 => self.host.to_string(),
-            _ => self.host.to_string() + ":" + &self.path,
-        }
-    }
-
-    #[allow(dead_code)]
     pub fn pop(&self) -> Option<Self> {
         let mut temp = self.clone();
         match temp.pop_mut() {
@@ -116,7 +108,14 @@ impl GitUrl {
 
 impl std::fmt::Display for GitUrl {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str(&self.to_string())
+        write!(
+            f,
+            "{}",
+            match self.path.len() {
+                0 => self.host.to_string(),
+                _ => self.host.to_string() + ":" + &self.path,
+            }
+        )
     }
 }
 
