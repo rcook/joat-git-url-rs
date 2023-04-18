@@ -32,17 +32,17 @@ impl GitUrl {
     #[allow(dead_code)]
     pub fn parse(value: &str) -> Option<Self> {
         if value.starts_with(Self::HTTP_PREFIX) {
-            value[Self::HTTP_PREFIX.len()..].find("/").map(|p| Self {
+            value[Self::HTTP_PREFIX.len()..].find('/').map(|p| Self {
                 host: value[..Self::HTTP_PREFIX.len() + p].to_string(),
                 path: value[Self::HTTP_PREFIX.len() + p + 1..].to_string(),
             })
         } else if value.starts_with(Self::HTTPS_PREFIX) {
-            value[Self::HTTPS_PREFIX.len()..].find("/").map(|p| Self {
+            value[Self::HTTPS_PREFIX.len()..].find('/').map(|p| Self {
                 host: value[..Self::HTTPS_PREFIX.len() + p].to_string(),
                 path: value[Self::HTTPS_PREFIX.len() + p + 1..].to_string(),
             })
         } else {
-            value.find(":").map(|p| Self {
+            value.find(':').map(|p| Self {
                 host: value[..p].to_string(),
                 path: value[p + 1..].to_string(),
             })
@@ -83,15 +83,15 @@ impl GitUrl {
     #[allow(dead_code)]
     pub fn join_mut(&mut self, child_path: &str) -> bool {
         let mut path = self.path.clone();
-        for part in child_path.split("/") {
-            if part.len() == 0 {
+        for part in child_path.split('/') {
+            if part.is_empty() {
                 return false;
             } else if part == ".." {
                 if !Self::pop_helper(&mut path) {
                     return false;
                 }
             } else if part != "." {
-                if path.len() > 0 {
+                if !path.is_empty() {
                     path += "/"
                 }
                 path += part
@@ -102,7 +102,7 @@ impl GitUrl {
     }
 
     fn pop_helper(path: &mut String) -> bool {
-        if path.len() == 0 {
+        if path.is_empty() {
             false
         } else {
             match path.rfind('/') {
