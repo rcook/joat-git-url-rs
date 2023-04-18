@@ -1,7 +1,7 @@
 [package]
 authors = ["Richard Cook"]
 description = "Git URL parser"
-homepage = "https://github.com/rcook/joatmon-rs/"
+homepage = "https://github.com/rcook/joat-git-url-rs/"
 license = "MIT"
 name = "joat-git-url"
 version = "0.0.1"
