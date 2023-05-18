@@ -19,6 +19,21 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+use std::error::Error as StdError;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::str::FromStr;
+
+#[derive(Debug)]
+pub struct ParseGitUrlError(String);
+
+impl Display for ParseGitUrlError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        f.write_str(&self.0)
+    }
+}
+
+impl StdError for ParseGitUrlError {}
+
 #[derive(Clone)]
 pub struct GitUrl {
     host: String,
@@ -28,26 +43,6 @@ pub struct GitUrl {
 impl GitUrl {
     const HTTP_PREFIX: &'static str = "http://";
     const HTTPS_PREFIX: &'static str = "https://";
-
-    #[allow(dead_code)]
-    pub fn parse(value: &str) -> Option<Self> {
-        if value.starts_with(Self::HTTP_PREFIX) {
-            value[Self::HTTP_PREFIX.len()..].find('/').map(|p| Self {
-                host: value[..Self::HTTP_PREFIX.len() + p].to_string(),
-                path: value[Self::HTTP_PREFIX.len() + p + 1..].to_string(),
-            })
-        } else if value.starts_with(Self::HTTPS_PREFIX) {
-            value[Self::HTTPS_PREFIX.len()..].find('/').map(|p| Self {
-                host: value[..Self::HTTPS_PREFIX.len() + p].to_string(),
-                path: value[Self::HTTPS_PREFIX.len() + p + 1..].to_string(),
-            })
-        } else {
-            value.find(':').map(|p| Self {
-                host: value[..p].to_string(),
-                path: value[p + 1..].to_string(),
-            })
-        }
-    }
 
     #[allow(dead_code)]
     pub fn pop(&self) -> Option<Self> {
@@ -106,8 +101,33 @@ impl GitUrl {
     }
 }
 
-impl std::fmt::Display for GitUrl {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl FromStr for GitUrl {
+    type Err = ParseGitUrlError;
+
+    #[allow(clippy::manual_strip)]
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let opt = if s.starts_with(Self::HTTP_PREFIX) {
+            s[Self::HTTP_PREFIX.len()..].find('/').map(|p| Self {
+                host: s[..Self::HTTP_PREFIX.len() + p].to_string(),
+                path: s[Self::HTTP_PREFIX.len() + p + 1..].to_string(),
+            })
+        } else if s.starts_with(Self::HTTPS_PREFIX) {
+            s[Self::HTTPS_PREFIX.len()..].find('/').map(|p| Self {
+                host: s[..Self::HTTPS_PREFIX.len() + p].to_string(),
+                path: s[Self::HTTPS_PREFIX.len() + p + 1..].to_string(),
+            })
+        } else {
+            s.find(':').map(|p| Self {
+                host: s[..p].to_string(),
+                path: s[p + 1..].to_string(),
+            })
+        };
+        opt.ok_or(ParseGitUrlError(String::from(s)))
+    }
+}
+
+impl Display for GitUrl {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(
             f,
             "{}",
@@ -121,26 +141,29 @@ impl std::fmt::Display for GitUrl {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{GitUrl, ParseGitUrlError};
+    use std::result::Result as StdResult;
 
     #[test]
-    fn test_pop_https() {
-        let x0 = GitUrl::parse("https://github.com/user/foo/bar/quux.git").expect("parse failed");
+    fn test_pop_https() -> StdResult<(), ParseGitUrlError> {
+        let x0 = "https://github.com/user/foo/bar/quux.git".parse::<GitUrl>()?;
         assert_eq!(x0.host, "https://github.com");
         assert_eq!(x0.path, "user/foo/bar/quux.git");
 
-        let x1 = GitUrl::parse("http://github.com/user/foo/bar/quux.git").expect("parse failed");
+        let x1 = "http://github.com/user/foo/bar/quux.git".parse::<GitUrl>()?;
         assert_eq!(x1.host, "http://github.com");
         assert_eq!(x1.path, "user/foo/bar/quux.git");
 
-        let x2 = GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+        let x2 = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
         assert_eq!(x2.host, "git@github.com");
         assert_eq!(x2.path, "user/foo/bar/quux.git");
+
+        Ok(())
     }
 
     #[test]
-    fn test_pop() {
-        let x0 = GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+    fn test_pop() -> StdResult<(), ParseGitUrlError> {
+        let x0 = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
 
         assert_eq!(x0.host, "git@github.com");
         assert_eq!(x0.path, "user/foo/bar/quux.git");
@@ -166,13 +189,14 @@ mod tests {
         assert_eq!(x4.path, "");
         assert_eq!(x4.to_string(), "git@github.com");
 
-        assert!(x4.pop().is_none())
+        assert!(x4.pop().is_none());
+
+        Ok(())
     }
 
     #[test]
-    fn test_pop_mut() {
-        let mut git_url =
-            GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+    fn test_pop_mut() -> StdResult<(), ParseGitUrlError> {
+        let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
 
         assert_eq!(git_url.host, "git@github.com");
         assert_eq!(git_url.path, "user/foo/bar/quux.git");
@@ -202,11 +226,13 @@ mod tests {
         assert_eq!(git_url.host, "git@github.com");
         assert_eq!(git_url.path, "");
         assert_eq!(git_url.to_string(), "git@github.com");
+
+        Ok(())
     }
 
     #[test]
-    fn test_join() {
-        let git_url = GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+    fn test_join() -> StdResult<(), ParseGitUrlError> {
+        let git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
 
         assert_eq!(
             git_url.join("aaa").expect("join failed").to_string(),
@@ -255,13 +281,14 @@ mod tests {
         );
 
         assert!(git_url.join("/aaa").is_none());
+
+        Ok(())
     }
 
     #[test]
-    fn test_join_mut() {
+    fn test_join_mut() -> StdResult<(), ParseGitUrlError> {
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("aaa"));
             assert_eq!(
                 git_url.to_string(),
@@ -270,8 +297,7 @@ mod tests {
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("aaa/bbb"));
             assert_eq!(
                 git_url.to_string(),
@@ -280,51 +306,46 @@ mod tests {
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("."));
             assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/quux.git")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut(".."));
             assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../aaa"));
             assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../aaa/bbb"));
             assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa/bbb")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../../../aaa/bbb"));
             assert_eq!(git_url.to_string(), "git@github.com:user/aaa/bbb")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../../../../aaa/bbb"));
             assert_eq!(git_url.to_string(), "git@github.com:aaa/bbb")
         }
 
         {
-            let mut git_url =
-                GitUrl::parse("git@github.com:user/foo/bar/quux.git").expect("parse failed");
+            let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(!git_url.join_mut("/aaa"))
         }
+
+        Ok(())
     }
 }
