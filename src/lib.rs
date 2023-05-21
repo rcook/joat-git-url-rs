@@ -19,6 +19,18 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
+#![warn(clippy::all)]
+#![warn(clippy::cargo)]
+//#![warn(clippy::expect_used)]
+#![warn(clippy::nursery)]
+//#![warn(clippy::panic_in_result_fn)]
+#![warn(clippy::pedantic)]
+#![allow(clippy::derive_partial_eq_without_eq)]
+#![allow(clippy::enum_glob_use)]
+#![allow(clippy::match_wildcard_for_single_variants)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::module_name_repetitions)]
+#![allow(clippy::option_if_let_else)]
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::str::FromStr;
@@ -45,11 +57,13 @@ impl GitUrl {
     const HTTPS_PREFIX: &'static str = "https://";
 
     #[allow(dead_code)]
+    #[must_use]
     pub fn pop(&self) -> Option<Self> {
         let mut temp = self.clone();
-        match temp.pop_mut() {
-            true => Some(temp),
-            false => None,
+        if temp.pop_mut() {
+            Some(temp)
+        } else {
+            None
         }
     }
 
@@ -59,11 +73,13 @@ impl GitUrl {
     }
 
     #[allow(dead_code)]
+    #[must_use]
     pub fn join(&self, child_path: &str) -> Option<Self> {
         let mut temp = self.clone();
-        match temp.join_mut(child_path) {
-            true => Some(temp),
-            false => None,
+        if temp.join_mut(child_path) {
+            Some(temp)
+        } else {
+            None
         }
     }
 
@@ -79,9 +95,9 @@ impl GitUrl {
                 }
             } else if part != "." {
                 if !path.is_empty() {
-                    path += "/"
+                    path += "/";
                 }
-                path += part
+                path += part;
             }
         }
         self.path = path;
@@ -122,7 +138,7 @@ impl FromStr for GitUrl {
                 path: s[p + 1..].to_string(),
             })
         };
-        opt.ok_or(ParseGitUrlError(String::from(s)))
+        opt.ok_or_else(|| ParseGitUrlError(String::from(s)))
     }
 }
 
@@ -293,7 +309,7 @@ mod tests {
             assert_eq!(
                 git_url.to_string(),
                 "git@github.com:user/foo/bar/quux.git/aaa"
-            )
+            );
         }
 
         {
@@ -302,48 +318,48 @@ mod tests {
             assert_eq!(
                 git_url.to_string(),
                 "git@github.com:user/foo/bar/quux.git/aaa/bbb"
-            )
+            );
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("."));
-            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/quux.git")
+            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/quux.git");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut(".."));
-            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar")
+            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../aaa"));
-            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa")
+            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../aaa/bbb"));
-            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa/bbb")
+            assert_eq!(git_url.to_string(), "git@github.com:user/foo/bar/aaa/bbb");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../../../aaa/bbb"));
-            assert_eq!(git_url.to_string(), "git@github.com:user/aaa/bbb")
+            assert_eq!(git_url.to_string(), "git@github.com:user/aaa/bbb");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
             assert!(git_url.join_mut("../../../../aaa/bbb"));
-            assert_eq!(git_url.to_string(), "git@github.com:aaa/bbb")
+            assert_eq!(git_url.to_string(), "git@github.com:aaa/bbb");
         }
 
         {
             let mut git_url = "git@github.com:user/foo/bar/quux.git".parse::<GitUrl>()?;
-            assert!(!git_url.join_mut("/aaa"))
+            assert!(!git_url.join_mut("/aaa"));
         }
 
         Ok(())

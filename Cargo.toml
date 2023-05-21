@@ -1,10 +1,13 @@
 [package]
 authors = ["Richard Cook"]
+categories = ["development-tools"]
 description = "Git URL parser"
-homepage = "https://github.com/rcook/joat-git-url-rs/"
+edition = "2021"
+homepage = "https://github.com/rcook/joat-git-url-rs"
+keywords = ["general"]
 license = "MIT"
 name = "joat-git-url"
+repository = "https://github.com/rcook/joat-git-url-rs"
 version = "0.0.4"
-edition = "2021"
 
 [dependencies]
