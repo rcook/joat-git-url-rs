@@ -3,6 +3,7 @@
 [![CI](https://github.com/rcook/joat-git-url-rs/actions/workflows/ci.yaml/badge.svg)][ci-workflow]
 [![Publish](https://github.com/rcook/joat-git-url-rs/actions/workflows/publish.yaml/badge.svg)][publish-workflow]
 [![crates.io](https://img.shields.io/crates/v/joat-git-url.svg)][crates-io]
+[![Docs](https://docs.rs/joat-git-url/badge.svg)](https://docs.rs/joat-git-url)
 
 Simple Git URL parser
 
